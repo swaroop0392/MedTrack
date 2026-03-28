@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#4f6ef7"/>
+  <meta name="description" content="Track daily medicines by time of day. Sign in to save on this device."/>
+  <title>MedTrack — Daily Medicine Tracker</title>
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="MedTrack"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:             #edf1f9;
+      --surface:        #ffffff;
+      --surface2:       #f5f7fc;
+      --border:         #dce2f0;
+      --border-soft:    #eaeff9;
+      --text:           #18243d;
+      --text-soft:      #475475;
+      --muted:          #8893b0;
+      --accent:         #4f6ef7;
+      --accent-dark:    #3753d0;
+      --accent-light:   #eaedfe;
+      --accent-glow:    rgba(79,110,247,0.16);
+      --morning:        #f59e0b;
+      --morning-soft:   #fef3c7;
+      --morning-text:   #92400e;
+      --afternoon:      #10b981;
+      --afternoon-soft: #d1fae5;
+      --afternoon-text: #065f46;
+      --night:          #8b5cf6;
+      --night-soft:     #ede9fe;
+      --night-text:     #4c1d95;
+      --danger:         #ef4444;
+      --danger-bg:      #fef2f2;
+      --shadow-xs: 0 1px 2px rgba(18,32,72,0.06);
+      --shadow-sm: 0 2px 8px rgba(18,32,72,0.07), 0 1px 2px rgba(18,32,72,0.05);
+      --shadow:    0 4px 20px rgba(18,32,72,0.09), 0 1px 4px rgba(18,32,72,0.05);
+      --shadow-lg: 0 12px 40px rgba(18,32,72,0.13), 0 2px 8px rgba(18,32,72,0.07);
+      --radius:    20px;
+      --radius-sm: 13px;
+      --radius-xs: 9px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+
+    .hidden { display: none !important; }
+
+    header {
+      background: linear-gradient(135deg, #141f52 0%, #253491 52%, #4f6ef7 100%);
+      padding: 26px 24px 42px;
+      position: sticky; top: 0; z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 520px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+
+    .logo { display: flex; align-items: center; gap: 13px; }
+
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 14px;
+      display: grid; place-items: center; font-size: 21px;
+    }
+
+    .logo-text h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem; color: #fff; letter-spacing: -0.3px; line-height: 1.1;
+    }
+
+    .logo-text small {
+      font-size: 0.68rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); letter-spacing: 0.5px; display: block; margin-top: 1px;
+    }
+
+    .header-actions {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-left: auto;
+    }
+
+    .date-badge {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.26);
+      color: rgba(255,255,255,0.92);
+      font-size: 0.7rem; font-weight: 600;
+      padding: 6px 13px; border-radius: 99px; letter-spacing: 0.4px;
+    }
+
+    .user-email {
+      font-size: 0.65rem; font-weight: 600;
+      color: rgba(255,255,255,0.78);
+      max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .btn-logout {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem; font-weight: 700;
+      padding: 8px 14px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+      color: #fff; cursor: pointer;
+      transition: background 0.18s, border-color 0.18s;
+    }
+
+    .btn-logout:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.5); }
+
+    .auth-wrap {
+      max-width: 420px; margin: -22px auto 0; padding: 0 16px 40px;
+      position: relative; z-index: 50;
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-soft);
+    }
+
+    .auth-card h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem; color: var(--text); margin-bottom: 6px;
+    }
+
+    .auth-card > p.sub {
+      font-size: 0.82rem; color: var(--muted); margin-bottom: 22px; line-height: 1.45;
+    }
+
+    .auth-tabs {
+      display: flex; gap: 8px; margin-bottom: 20px;
+      background: var(--surface2); padding: 5px; border-radius: var(--radius-xs);
+      border: 1px solid var(--border-soft);
+    }
+
+    .auth-tab {
+      flex: 1; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem; font-weight: 700;
+      padding: 10px 12px; cursor: pointer;
+      background: transparent; color: var(--text-soft);
+      transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    }
+
+    .auth-tab.active {
+      background: #fff; color: var(--accent);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .auth-panel { display: none; flex-direction: column; gap: 16px; }
+    .auth-panel.active { display: flex; }
+
+    .auth-error {
+      font-size: 0.78rem; font-weight: 600; color: var(--danger);
+      background: var(--danger-bg); padding: 10px 12px; border-radius: var(--radius-xs);
+      display: none;
+    }
+
+    .auth-error.show { display: block; }
+
+    .auth-submit {
+      width: 100%;
+      margin-top: 4px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      color: #fff; border: none;
+      border-radius: var(--radius-xs); padding: 13px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.93rem; font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(79,110,247,0.38);
+      transition: opacity 0.18s, transform 0.13s;
+    }
+
+    .auth-submit:hover { opacity: 0.92; }
+    .auth-submit:active { transform: scale(0.98); }
+    .auth-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    .auth-forgot-wrap { text-align: center; margin-top: 4px; }
+
+    .auth-forgot {
+      background: none; border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--accent); cursor: pointer;
+      text-decoration: underline; text-underline-offset: 3px;
+      padding: 6px 8px;
+    }
+
+    .auth-forgot:hover { color: var(--accent-dark); }
+
+    .password-input-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .password-input-wrap input {
+      width: 100%;
+      padding-right: 72px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px 4px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .password-toggle:hover { color: var(--accent-dark); }
+
+    main {
+      max-width: 520px; margin: 0 auto;
+      padding: 0 16px;
+      transform: translateY(-22px);
+    }
+
+    .add-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 16px;
+      border: 1px solid var(--border-soft);
+    }
+
+    .section-title {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    }
+
+    .t-icon {
+      width: 32px; height: 32px;
+      background: var(--accent-light);
+      border-radius: var(--radius-xs);
+      display: grid; place-items: center; font-size: 15px;
+    }
+
+    .section-title h2 {
+      font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--text);
+    }
+
+    .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .field { display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 140px; }
+
+    label {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--muted);
+    }
+
+    input[type="text"], input[type="email"], input[type="password"], select {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem; font-weight: 500;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 11px 14px;
+      background: var(--surface2); color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      width: 100%;
+    }
+
+    input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+    input[type="time"]:focus, select:focus {
+      border-color: var(--accent); background: #fff;
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    input[type="time"] {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem; font-weight: 500;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 10px 12px;
+      background: var(--surface2); color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    select { cursor: pointer; }
+
+    .field-narrow { flex: 0 1 160px; min-width: 140px; }
+
+    .add-btn {
+      margin-top: 16px; width: 100%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      color: #fff; border: none;
+      border-radius: var(--radius-xs); padding: 13px 20px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.93rem; font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.18s, transform 0.13s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 16px rgba(79,110,247,0.38);
+    }
+
+    .add-btn:hover { opacity: 0.9; box-shadow: 0 6px 22px rgba(79,110,247,0.48); }
+    .add-btn:active { transform: scale(0.98); }
+
+    .progress-card {
+      background: var(--surface);
+      border-radius: var(--radius); padding: 22px 24px;
+      box-shadow: var(--shadow); margin-bottom: 24px;
+      border: 1px solid var(--border-soft);
+    }
+
+    .progress-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+    }
+
+    .progress-label {
+      font-size: 0.72rem; font-weight: 700;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.9px;
+    }
+
+    .progress-fraction {
+      font-size: 0.83rem; font-weight: 700;
+      color: var(--accent); background: var(--accent-light);
+      padding: 3px 12px; border-radius: 99px;
+    }
+
+    .progress-bar-bg {
+      height: 10px; background: var(--border); border-radius: 99px; overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #879dff);
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    }
+
+    .progress-pills { display: flex; gap: 8px; margin-top: 14px; }
+
+    .pill {
+      flex: 1; display: flex; align-items: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-xs); padding: 9px 10px;
+      font-size: 0.7rem; font-weight: 600; color: var(--text-soft);
+    }
+
+    .pill-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .time-section { margin-bottom: 26px; }
+
+    .time-header {
+      display: flex; align-items: center; gap: 10px; padding: 0 2px; margin-bottom: 12px;
+    }
+
+    .time-icon {
+      width: 36px; height: 36px; border-radius: 11px;
+      display: grid; place-items: center; font-size: 17px; flex-shrink: 0;
+    }
+
+    .morning   .time-icon { background: var(--morning-soft); }
+    .afternoon .time-icon { background: var(--afternoon-soft); }
+    .night     .time-icon { background: var(--night-soft); }
+
+    .time-title { font-family: 'DM Serif Display', serif; font-size: 1.08rem; color: var(--text); }
+
+    .time-count {
+      margin-left: auto; font-size: 0.7rem; font-weight: 700;
+      border-radius: 99px; padding: 3px 12px;
+    }
+
+    .morning   .time-count { background: var(--morning-soft);   color: var(--morning-text); }
+    .afternoon .time-count { background: var(--afternoon-soft); color: var(--afternoon-text); }
+    .night     .time-count { background: var(--night-soft);     color: var(--night-text); }
+
+    .med-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .med-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      padding: 14px 14px 14px 18px;
+      display: flex; align-items: center; gap: 13px;
+      box-shadow: var(--shadow-xs);
+      transition: box-shadow 0.2s, border-color 0.2s, opacity 0.25s;
+      animation: slideIn 0.28s cubic-bezier(.4,0,.2,1);
+      position: relative; overflow: hidden;
+    }
+
+    .med-card::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; border-radius: 13px 0 0 13px;
+    }
+
+    .morning   .med-card::before { background: var(--morning); }
+    .afternoon .med-card::before { background: var(--afternoon); }
+    .night     .med-card::before { background: var(--night); }
+
+    .med-card:hover { box-shadow: var(--shadow-sm); border-color: var(--border); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-7px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .med-card.taken { opacity: 0.62; background: var(--surface2); }
+
+    .med-checkbox {
+      appearance: none; -webkit-appearance: none;
+      width: 24px; height: 24px;
+      border: 2px solid var(--border); border-radius: 8px; flex-shrink: 0;
+      cursor: pointer; position: relative; transition: all 0.18s; background: var(--surface2);
+    }
+
+    .morning   .med-checkbox:checked { background: var(--morning);   border-color: var(--morning); }
+    .afternoon .med-checkbox:checked { background: var(--afternoon); border-color: var(--afternoon); }
+    .night     .med-checkbox:checked { background: var(--night);     border-color: var(--night); }
+
+    .med-checkbox:checked::after {
+      content: '';
+      position: absolute; left: 6px; top: 2px;
+      width: 7px; height: 12px;
+      border: 2.5px solid #fff; border-top: none; border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .med-info { flex: 1; min-width: 0; }
+
+    .med-name {
+      font-weight: 600; font-size: 0.95rem; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: color 0.2s; margin-bottom: 4px;
+    }
+
+    .med-card.taken .med-name { color: var(--muted); text-decoration: line-through; }
+
+    .med-time-tag {
+      font-size: 0.67rem; font-weight: 700;
+      border-radius: 6px; padding: 2px 9px;
+      display: inline-block; letter-spacing: 0.3px;
+    }
+
+    .morning   .med-time-tag { background: var(--morning-soft);   color: var(--morning-text); }
+    .afternoon .med-time-tag { background: var(--afternoon-soft); color: var(--afternoon-text); }
+    .night     .med-time-tag { background: var(--night-soft);     color: var(--night-text); }
+
+    .card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    .icon-btn {
+      background: none; border: none; cursor: pointer;
+      width: 32px; height: 32px; border-radius: 8px;
+      display: grid; place-items: center;
+      transition: color 0.16s, background 0.16s; flex-shrink: 0; color: var(--muted);
+    }
+
+    .edit-btn:hover   { color: var(--accent); background: var(--accent-light); }
+    .delete-btn:hover { color: var(--danger); background: var(--danger-bg); }
+
+    .empty-state {
+      background: var(--surface2); border: 2px dashed var(--border);
+      border-radius: var(--radius-sm); text-align: center; padding: 30px 20px; color: var(--muted);
+    }
+
+    .empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.55; }
+    .empty-state p { font-size: 0.82rem; font-weight: 500; }
+
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,14,38,0.5); backdrop-filter: blur(5px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.22s;
+    }
+
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius); padding: 28px; width: 100%; max-width: 420px;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(18px) scale(0.97);
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+    .modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+
+    .modal-header .t-icon { width: 36px; height: 36px; border-radius: var(--radius-xs); font-size: 17px; }
+
+    .modal-title { font-family: 'DM Serif Display', serif; font-size: 1.15rem; color: var(--text); }
+
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+
+    .btn-cancel {
+      flex: 1; background: var(--surface2); border: 2px solid var(--border);
+      border-radius: var(--radius-xs); padding: 12px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+      color: var(--text-soft); cursor: pointer; transition: background 0.18s;
+    }
+
+    .btn-cancel:hover { background: var(--border); }
+
+    .btn-save {
+      flex: 1;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border: none; border-radius: var(--radius-xs); padding: 12px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 700;
+      color: #fff; cursor: pointer; transition: opacity 0.18s;
+      box-shadow: 0 4px 14px rgba(79,110,247,0.32);
+    }
+
+    .btn-save:hover { opacity: 0.88; }
+
+    .toast {
+      position: fixed; bottom: 30px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text); color: #fff;
+      font-size: 0.84rem; font-weight: 600;
+      padding: 11px 22px; border-radius: 99px;
+      opacity: 0; pointer-events: none;
+      transition: all 0.3s cubic-bezier(.4,0,.2,1);
+      white-space: nowrap; z-index: 999;
+      box-shadow: 0 6px 28px rgba(18,32,72,0.22);
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">💊</div>
+      <div class="logo-text">
+        <h1>MedTrack</h1>
+        <small>Daily Medicine Tracker</small>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="user-email hidden" id="userEmail" title=""></span>
+      <div class="date-badge hidden" id="dateBadge"></div>
+      <button type="button" class="btn-logout hidden" id="btnLogout">Logout</button>
+    </div>
+  </div>
+</header>
+
+<section class="auth-wrap" id="authWrap">
+  <div class="auth-card">
+    <h2>Welcome</h2>
+    <p class="sub">Sign in to open your tracker. Your list is saved in this browser only, per account (localStorage).</p>
+    <div class="auth-tabs" role="tablist">
+      <button type="button" class="auth-tab active" id="tabLogin" data-mode="login" aria-selected="true">Log in</button>
+      <button type="button" class="auth-tab" id="tabSignup" data-mode="signup" aria-selected="false">Sign up</button>
+    </div>
+    <div id="authError" class="auth-error" role="alert"></div>
+    <div class="auth-panel active" id="panelLogin" data-panel="login">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" autocomplete="username" placeholder="you@example.com" required/>
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <div class="password-input-wrap">
+          <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" required/>
+          <button type="button" class="password-toggle" id="toggleLoginPassword" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
+      </div>
+      <button type="button" class="auth-submit" id="btnLogin">Log in</button>
+      <div class="auth-forgot-wrap">
+        <button type="button" class="auth-forgot" id="btnForgotPassword">Forgot password?</button>
+      </div>
+    </div>
+    <div class="auth-panel" id="panelSignup" data-panel="signup">
+      <div class="field">
+        <label for="signupEmail">Email</label>
+        <input type="email" id="signupEmail" autocomplete="email" placeholder="you@example.com" required/>
+      </div>
+      <div class="field">
+        <label for="signupPassword">Password</label>
+        <div class="password-input-wrap">
+          <input type="password" id="signupPassword" autocomplete="new-password" placeholder="At least 6 characters" minlength="6" required/>
+          <button type="button" class="password-toggle" id="toggleSignupPassword" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
+      </div>
+      <button type="button" class="auth-submit" id="btnSignup">Create account</button>
+    </div>
+  </div>
+</section>
+
+<main id="trackerMain" class="hidden">
+
+  <div class="add-card">
+    <div class="section-title">
+      <div class="t-icon">➕</div>
+      <h2>Add Medicine</h2>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="medName">Medicine name</label>
+        <input type="text" id="medName" placeholder="e.g. Paracetamol" maxlength="40"/>
+      </div>
+      <div class="field">
+        <label for="medTime">Time of day</label>
+        <select id="medTime">
+          <option value="morning">🌅 Morning</option>
+          <option value="afternoon">☀️ Afternoon</option>
+          <option value="night">🌙 Night</option>
+        </select>
+      </div>
+      <div class="field field-narrow">
+        <label for="medReminderTime">Reminder time</label>
+        <input type="time" id="medReminderTime" value="08:00"/>
+      </div>
+    </div>
+    <button class="add-btn" onclick="addMedicine()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Medicine
+    </button>
+  </div>
+
+  <div class="progress-card">
+    <div class="progress-header">
+      <span class="progress-label">Today's Progress</span>
+      <span class="progress-fraction" id="progressCount">0 / 0 taken</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="progress-pills">
+      <div class="pill"><span class="pill-dot" style="background:var(--morning)"></span><span id="pill-morning">0/0 Morning</span></div>
+      <div class="pill"><span class="pill-dot" style="background:var(--afternoon)"></span><span id="pill-afternoon">0/0 Afternoon</span></div>
+      <div class="pill"><span class="pill-dot" style="background:var(--night)"></span><span id="pill-night">0/0 Night</span></div>
+    </div>
+  </div>
+
+  <div class="time-section morning">
+    <div class="time-header">
+      <div class="time-icon">🌅</div>
+      <span class="time-title">Morning</span>
+      <span class="time-count" id="count-morning">0</span>
+    </div>
+    <div class="med-list" id="list-morning"></div>
+  </div>
+
+  <div class="time-section afternoon">
+    <div class="time-header">
+      <div class="time-icon">☀️</div>
+      <span class="time-title">Afternoon</span>
+      <span class="time-count" id="count-afternoon">0</span>
+    </div>
+    <div class="med-list" id="list-afternoon"></div>
+  </div>
+
+  <div class="time-section night">
+    <div class="time-header">
+      <div class="time-icon">🌙</div>
+      <span class="time-title">Night</span>
+      <span class="time-count" id="count-night">0</span>
+    </div>
+    <div class="med-list" id="list-night"></div>
+  </div>
+
+</main>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="t-icon">✏️</div>
+      <div class="modal-title">Edit Medicine</div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="editName">Medicine name</label>
+        <input type="text" id="editName" maxlength="40" placeholder="Medicine name"/>
+      </div>
+      <div class="field">
+        <label for="editTime">Time of day</label>
+        <select id="editTime">
+          <option value="morning">🌅 Morning</option>
+          <option value="afternoon">☀️ Afternoon</option>
+          <option value="night">🌙 Night</option>
+        </select>
+      </div>
+      <div class="field field-narrow">
+        <label for="editReminderTime">Reminder time</label>
+        <input type="time" id="editReminderTime"/>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEdit()">Cancel</button>
+      <button class="btn-save"   onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    sendPasswordResetEmail,
+  } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+  /* Firebase is used for sign-in only. Medicine data lives in localStorage per user id + day. */
+  const firebaseConfig = {
+    apiKey: 'AIzaSyCsXslFbykmi9TxWS_dr8Lklc3iOvl-bRY',
+    authDomain: 'medicine-tracker-c9825.firebaseapp.com',
+    projectId: 'medicine-tracker-c9825',
+    storageBucket: 'medicine-tracker-c9825.firebasestorage.app',
+    messagingSenderId: '665954488306',
+    appId: '1:665954488306:web:c979e3d033a49809fce56b',
+    measurementId: 'G-WJSDBD1XX2',
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  let currentUid = null;
+
+  const todayKey = () => new Date().toISOString().slice(0, 10);
+  const defaultReminderByPeriod = { morning: '08:00', afternoon: '14:00', night: '21:00' };
+
+  function storageKey() {
+    if (!currentUid) return null;
+    return 'medtrack-' + currentUid + '-' + todayKey();
+  }
+
+  function loadData() {
+    if (!currentUid) return [];
+    const key = storageKey();
+    if (key) {
+      const r = localStorage.getItem(key);
+      if (r) {
+        try {
+          const parsed = JSON.parse(r);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {}
+      }
+    }
+    const legacy = localStorage.getItem('medtrack-' + todayKey());
+    if (legacy) {
+      try {
+        const parsed = JSON.parse(legacy);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_) {}
+    }
+    return [];
+  }
+
+  function saveData(m) {
+    const key = storageKey();
+    if (key) localStorage.setItem(key, JSON.stringify(m));
+  }
+
+  function reminderHHMM(med) {
+    return med.reminderTime || defaultReminderByPeriod[med.time] || '08:00';
+  }
+
+  function formatClock(hhmm) {
+    const parts = (hhmm || '08:00').split(':');
+    const h = +parts[0], m = +parts[1] || 0;
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  function setAuthError(msg) {
+    const el = document.getElementById('authError');
+    if (!msg) {
+      el.textContent = '';
+      el.classList.remove('show');
+      return;
+    }
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function normalizeEmail(raw) {
+    return String(raw || '')
+      .trim()
+      .replace(/\u200c|\u200d|\ufeff/g, '')
+      .toLowerCase();
+  }
+
+  function authErrorMessage(code) {
+    const wrongCreds =
+      'That email or password doesn’t match what we have. Use the same email and password you used at sign-up (check Caps Lock). If you’re sure the email is right, try Forgot password?';
+    const map = {
+      'auth/invalid-email': 'Please enter a valid email address.',
+      'auth/user-disabled': 'This account has been disabled.',
+      'auth/user-not-found': wrongCreds,
+      'auth/wrong-password': wrongCreds,
+      'auth/invalid-credential': wrongCreds,
+      'auth/invalid-login-credentials': wrongCreds,
+      'auth/email-already-in-use': 'This email is already registered. Log in instead.',
+      'auth/weak-password': 'Password should be at least 6 characters.',
+      'auth/too-many-requests': 'Too many attempts. Try again later.',
+      'auth/network-request-failed': 'Network error. Check your connection.',
+      'auth/missing-password': 'Please enter your password.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+
+  function updateDateBadge() {
+    document.getElementById('dateBadge').textContent =
+      new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  function showTrackerUI(user) {
+    currentUid = user.uid;
+    document.getElementById('authWrap').classList.add('hidden');
+    document.getElementById('trackerMain').classList.remove('hidden');
+    document.getElementById('dateBadge').classList.remove('hidden');
+    document.getElementById('btnLogout').classList.remove('hidden');
+    const emailEl = document.getElementById('userEmail');
+    emailEl.textContent = user.email || '';
+    emailEl.title = user.email || '';
+    emailEl.classList.remove('hidden');
+    updateDateBadge();
+    render();
+  }
+
+  function hideTrackerUI() {
+    currentUid = null;
+    closeEdit();
+    document.getElementById('trackerMain').classList.add('hidden');
+    document.getElementById('authWrap').classList.remove('hidden');
+    document.getElementById('dateBadge').classList.add('hidden');
+    document.getElementById('btnLogout').classList.add('hidden');
+    document.getElementById('userEmail').classList.add('hidden');
+  }
+
+  function render() {
+    if (!currentUid) return;
+    const meds = loadData();
+    const icons = { morning: '🌅', afternoon: '☀️', night: '🌙' };
+    ['morning', 'afternoon', 'night'].forEach(time => {
+      const list = document.getElementById('list-' + time);
+      const filtered = meds.filter(m => m.time === time);
+      const taken = filtered.filter(m => m.taken).length;
+      document.getElementById('count-' + time).textContent = filtered.length;
+      document.getElementById('pill-' + time).textContent =
+        taken + '/' + filtered.length + ' ' + capitalize(time);
+      if (!filtered.length) {
+        list.innerHTML =
+          '<div class="empty-state"><div class="empty-icon">' +
+          icons[time] +
+          '</div><p>No medicines for ' +
+          time +
+          '</p></div>';
+        return;
+      }
+      list.innerHTML = filtered
+        .map(
+          med => {
+            return `
+        <div class="med-card ${med.taken ? 'taken' : ''}">
+          <input type="checkbox" class="med-checkbox" ${med.taken ? 'checked' : ''} onchange='toggleTaken(${JSON.stringify(String(med.id))})' title="Mark as taken"/>
+          <div class="med-info">
+            <div class="med-name">${escapeHtml(med.name)}</div>
+            <span class="med-time-tag">${capitalize(med.time)}${med.reminderTime ? ' · ' + formatClock(med.reminderTime) : ''}</span>
+          </div>
+          <div class="card-actions">
+            <button class="icon-btn edit-btn" onclick='openEdit(${JSON.stringify(String(med.id))})' title="Edit">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="icon-btn delete-btn" onclick='deleteMed(${JSON.stringify(String(med.id))})' title="Remove">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </div>`;
+          }
+        )
+        .join('');
+    });
+    const total = meds.length,
+      taken = meds.filter(m => m.taken).length;
+    document.getElementById('progressCount').textContent = taken + ' / ' + total + ' taken';
+    document.getElementById('progressBar').style.width = total ? (taken / total) * 100 + '%' : '0%';
+  }
+
+  function medById(meds, id) {
+    const s = String(id);
+    return meds.find(m => String(m.id) === s);
+  }
+
+  function medIndexById(meds, id) {
+    const s = String(id);
+    return meds.findIndex(m => String(m.id) === s);
+  }
+
+  function addMedicine() {
+    if (!currentUid) return;
+    const el = document.getElementById('medName'),
+      name = el.value.trim();
+    if (!name) {
+      el.focus();
+      el.style.borderColor = 'var(--accent)';
+      el.style.boxShadow = '0 0 0 4px var(--accent-glow)';
+      setTimeout(() => {
+        el.style.borderColor = '';
+        el.style.boxShadow = '';
+      }, 1400);
+      return;
+    }
+    try {
+      const meds = loadData();
+      const period = document.getElementById('medTime').value;
+      const reminderTime = document.getElementById('medReminderTime').value || defaultReminderByPeriod[period];
+      meds.push({ id: Date.now().toString(), name, time: period, reminderTime, taken: false });
+      saveData(meds);
+      el.value = '';
+      document.getElementById('medReminderTime').value = defaultReminderByPeriod[period];
+      render();
+      showToast('💊 ' + name + ' added!');
+    } catch (e) {
+      console.error(e);
+      showToast('Could not save medicine.');
+    }
+  }
+
+  function toggleTaken(id) {
+    if (!currentUid) return;
+    try {
+      const meds = loadData(),
+        med = medById(meds, id);
+      if (med) {
+        med.taken = !med.taken;
+        saveData(meds);
+        render();
+        if (med.taken) showToast('✅ Marked as taken!');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Could not update.');
+    }
+  }
+
+  let editingId = null;
+
+  function openEdit(id) {
+    if (!currentUid) return;
+    const med = medById(loadData(), id);
+    if (!med) return;
+    editingId = id;
+    document.getElementById('editName').value = med.name;
+    document.getElementById('editTime').value = med.time;
+    document.getElementById('editReminderTime').value = reminderHHMM(med);
+    document.getElementById('editModal').classList.add('open');
+    setTimeout(() => document.getElementById('editName').focus(), 120);
+  }
+
+  function closeEdit() {
+    editingId = null;
+    document.getElementById('editModal').classList.remove('open');
+  }
+
+  function saveEdit() {
+    if (!currentUid) return;
+    const name = document.getElementById('editName').value.trim();
+    if (!name) {
+      document.getElementById('editName').focus();
+      return;
+    }
+    try {
+      const meds = loadData(),
+        med = medById(meds, editingId);
+      if (med) {
+        med.name = name;
+        med.time = document.getElementById('editTime').value;
+        const rt = document.getElementById('editReminderTime').value;
+        med.reminderTime = rt || defaultReminderByPeriod[med.time];
+        saveData(meds);
+        render();
+        showToast('✏️ Medicine updated!');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Could not save changes.');
+    }
+    closeEdit();
+  }
+
+  function deleteMed(id) {
+    if (!currentUid) return;
+    try {
+      const meds = loadData(),
+        idx = medIndexById(meds, id);
+      if (idx !== -1) {
+        const n = meds[idx].name;
+        meds.splice(idx, 1);
+        saveData(meds);
+        render();
+        showToast('🗑️ ' + n + ' removed');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Could not delete.');
+    }
+  }
+
+  function escapeHtml(s) {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function setAuthMode(mode) {
+    document.querySelectorAll('.auth-tab').forEach(btn => {
+      const on = btn.dataset.mode === mode;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.auth-panel').forEach(p => {
+      p.classList.toggle('active', p.dataset.panel === mode);
+    });
+    setAuthError('');
+  }
+
+  document.getElementById('tabLogin').addEventListener('click', () => setAuthMode('login'));
+  document.getElementById('tabSignup').addEventListener('click', () => setAuthMode('signup'));
+
+  async function handleLogin() {
+    setAuthError('');
+    const email = normalizeEmail(document.getElementById('loginEmail').value);
+    const password = document.getElementById('loginPassword').value;
+    document.getElementById('loginEmail').value = email;
+    if (!email) {
+      setAuthError('Please enter your email.');
+      return;
+    }
+    if (!password) {
+      setAuthError('Please enter your password.');
+      return;
+    }
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = true;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      setAuthError(authErrorMessage(e.code));
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function handleSignup() {
+    setAuthError('');
+    const email = normalizeEmail(document.getElementById('signupEmail').value);
+    const password = document.getElementById('signupPassword').value;
+    document.getElementById('signupEmail').value = email;
+    const btn = document.getElementById('btnSignup');
+    if (!email) {
+      setAuthError('Please enter your email.');
+      return;
+    }
+    if (password.length < 6) {
+      setAuthError('Password should be at least 6 characters.');
+      return;
+    }
+    btn.disabled = true;
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('signupPassword').value = '';
+      showToast("You're signed in. Use Log out when you're done.");
+    } catch (e) {
+      setAuthError(authErrorMessage(e.code));
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function handleForgotPassword() {
+    setAuthError('');
+    const email = normalizeEmail(document.getElementById('loginEmail').value);
+    document.getElementById('loginEmail').value = email;
+    if (!email) {
+      setAuthError('Enter your email above, then tap Forgot password again.');
+      setAuthMode('login');
+      document.getElementById('loginEmail').focus();
+      return;
+    }
+    const btn = document.getElementById('btnForgotPassword');
+    btn.disabled = true;
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showToast('If an account exists for that email, a reset link was sent.');
+    } catch (e) {
+      setAuthError(authErrorMessage(e.code));
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('btnLogin').addEventListener('click', handleLogin);
+  document.getElementById('btnSignup').addEventListener('click', handleSignup);
+  document.getElementById('btnForgotPassword').addEventListener('click', handleForgotPassword);
+
+  function wirePasswordToggle(inputId, buttonId) {
+    document.getElementById(buttonId).addEventListener('click', () => {
+      const input = document.getElementById(inputId);
+      const btn = document.getElementById(buttonId);
+      const revealing = input.type === 'password';
+      input.type = revealing ? 'text' : 'password';
+      btn.textContent = revealing ? 'Hide' : 'Show';
+      btn.setAttribute('aria-label', revealing ? 'Hide password' : 'Show password');
+      btn.setAttribute('aria-pressed', revealing ? 'true' : 'false');
+    });
+  }
+
+  wirePasswordToggle('loginPassword', 'toggleLoginPassword');
+  wirePasswordToggle('signupPassword', 'toggleSignupPassword');
+  document.getElementById('loginEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+  document.getElementById('loginPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+  document.getElementById('signupEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSignup();
+  });
+  document.getElementById('signupPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSignup();
+  });
+
+  document.getElementById('btnLogout').addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      showToast('Could not sign out.');
+    }
+  });
+
+  document.getElementById('editModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeEdit();
+  });
+  document.getElementById('editName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveEdit();
+    if (e.key === 'Escape') closeEdit();
+  });
+  document.getElementById('medName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addMedicine();
+  });
+  document.getElementById('medTime').addEventListener('change', function () {
+    document.getElementById('medReminderTime').value = defaultReminderByPeriod[this.value];
+  });
+  document.getElementById('editTime').addEventListener('change', function () {
+    document.getElementById('editReminderTime').value = defaultReminderByPeriod[this.value];
+  });
+
+  onAuthStateChanged(auth, user => {
+    if (user) showTrackerUI(user);
+    else hideTrackerUI();
+  });
+
+  Object.assign(window, {
+    addMedicine,
+    toggleTaken,
+    openEdit,
+    closeEdit,
+    saveEdit,
+    deleteMed,
+  });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function (err) {
+        console.warn('Service worker registration failed:', err);
+      });
+    });
+  }
+</script>
+</body>
+</html>
